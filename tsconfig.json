@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"allowJs": true,
+		"esModuleInterop": true,
+		"lib": [
+			"es2023"
+		],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"noEmit": true,
+    "skipLibCheck": true,
+		"strict": true,
+		"target": "ES2022",
+	},
+	"include": [
+		"pouchdb-adapter-sitamaja/**/*.js",
+	]
+}

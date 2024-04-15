@@ -1,10 +1,18 @@
-// similar to an idb or websql transaction object
-// designed to be passed around. basically just caches
-// things in-memory and then does a big batch() operation
-// when you're done
+// @ts-check
 
-import { nextTick } from 'pouchdb-utils';
+/**
+ * @typedef {any} Database
+ * @typedef {any} Store
+ * @typedef {any} Operation
+ * @typedef {any} Key
+ * @typedef {any} Value
+ */
 
+/**
+ * @param {LevelTransaction} transaction
+ * @param {Store} store
+ * @returns {Map<Key, Value>}
+ */
 function getCacheFor(transaction, store) {
 	const prefix = store.prefix()[0];
 	const cache = transaction._cache;
@@ -17,55 +25,61 @@ function getCacheFor(transaction, store) {
 	return subCache;
 }
 
-class LevelTransaction {
+export default class LevelTransaction {
 	constructor() {
-		this._batch = [];
+		this._batch = /** @type {Operation[]} */([]);
 		this._cache = new Map();
 	}
 
-	get(store, key, callback) {
+	/**
+	 * @param {Store} store
+	 * @param {Key} key
+	 * @returns {Promise<Value>}
+	 */
+	async get(store, key) {
 		const cache = getCacheFor(this, store);
 		const exists = cache.get(key);
-		if (exists) {
-			return nextTick(() => {
-				callback(null, exists);
-			});
-		} if (exists === null) { // deleted marker
-			/* istanbul ignore next */
-			return nextTick(() => {
-				callback({ name: 'NotFoundError' });
-			});
-		}
-		store.get(key, (err, res) => {
-			if (err) {
-				/* istanbul ignore else */
-				if (err.name === 'NotFoundError') {
-					cache.set(key, null);
-				}
 
-				return callback(err);
+		if (exists != null) {
+			return exists;
+		}
+
+		if (exists === null) { // deleted marker
+			/* istanbul ignore next */
+			// eslint-disable-next-line no-throw-literal
+			throw { name: 'NotFoundError' };
+		}
+
+		const res = await store.get(key).catch(/** @param {any} e */e => {
+			if (e.name === 'NotFoundError') {
+				cache.set(key, null);
 			}
-			cache.set(key, res);
-			callback(null, res);
+
+			throw e;
 		});
+
+		cache.set(key, res);
+
+		return res;
 	}
 
+	/**
+	 * @param {Operation[]} batch
+	 */
 	batch(batch) {
-		for (let i = 0, len = batch.length; i < len; i++) {
-			const operation = batch[i];
-
+		for (const operation of batch) {
 			const cache = getCacheFor(this, operation.prefix);
 
-			if (operation.type === 'put') {
-				cache.set(operation.key, operation.value);
-			} else {
-				cache.set(operation.key, null);
-			}
+			cache.set(operation.key, operation.type === 'put' ? operation.value : null);
 		}
-		this._batch = this._batch.concat(batch);
+
+		this._batch.push(...batch);
 	}
 
-	execute(db, callback) {
+	/**
+	 * @param {Database} db
+	 */
+	async execute(db) {
 		const keys = new Set();
 		const uniqBatches = [];
 
@@ -80,8 +94,6 @@ class LevelTransaction {
 			uniqBatches.push(operation);
 		}
 
-		db.batch(uniqBatches, callback);
+		await db.batch(uniqBatches);
 	}
 }
-
-export default LevelTransaction;
