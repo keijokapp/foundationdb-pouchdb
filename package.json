@@ -10,20 +10,26 @@
   },
   "dependencies": {
     "double-ended-queue": "^2.1.0-0",
+    "express": "^4.19.2",
     "level": "^8.0.1",
     "level-write-stream": "^1.0.0",
     "leveldown": "^6.1.1",
     "levelup": "^4.4.0",
+    "pouchdb-adapter-http": "^8.0.1",
     "pouchdb-adapter-utils": "^8.0.1",
     "pouchdb-binary-utils": "^8.0.1",
     "pouchdb-core": "^8.0.1",
     "pouchdb-errors": "^8.0.1",
+    "pouchdb-express-router": "^0.0.11",
     "pouchdb-json": "^8.0.1",
+    "pouchdb-mapreduce": "^8.0.1",
     "pouchdb-md5": "^8.0.1",
     "pouchdb-merge": "^8.0.1",
+    "pouchdb-replication": "^8.0.1",
     "pouchdb-utils": "^8.0.1",
     "sublevel-pouchdb": "^8.0.1",
-    "through2": "^3.0.2"
+    "through2": "^3.0.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@arbendium/eslint-config-base": "^0.2.1",
