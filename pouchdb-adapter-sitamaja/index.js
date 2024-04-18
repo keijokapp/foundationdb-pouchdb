@@ -115,13 +115,7 @@ function callbackify(fn) {
 async function fetchAttachment(att, stores, opts) {
 	const type = att.content_type;
 
-	const buffer = await stores.binaryStore.get(att.digest).catch(e => {
-		if (e.name !== 'NotFoundError') {
-			throw e;
-		}
-
-		return Buffer.allocUnsafe(0);
-	});
+	const buffer = await stores.binaryStore.get(att.digest) ?? Buffer.allocUnsafe(0);
 
 	buffer.type = type;
 
@@ -237,14 +231,16 @@ export default async function LevelPouch(opts) {
 
 	// afterLastMigration
 	if (typeof db._updateSeq === 'undefined') {
-		db._updateSeq = await stores.metaStore.get(UPDATE_SEQ_KEY).catch(() => 0);
+		db._updateSeq = await stores.metaStore.get(UPDATE_SEQ_KEY) ?? 0;
 	}
 
-	db._docCount = await stores.metaStore.get(DOC_COUNT_KEY).catch(() => 0);
-	const instanceId = await stores.metaStore.get(UUID_KEY).catch(async () => {
-		const instanceId = uuid();
+	db._docCount = await stores.metaStore.get(DOC_COUNT_KEY) ?? 0;
+	const instanceId = await stores.metaStore.get(UUID_KEY).then(async instanceId => {
+		if (instanceId == null) {
+			const instanceId = uuid();
 
-		await stores.metaStore.put(UUID_KEY, instanceId);
+			await stores.metaStore.put(UUID_KEY, instanceId);
+		}
 
 		return instanceId;
 	});
@@ -370,7 +366,7 @@ export default async function LevelPouch(opts) {
 	api._get = callbackify(readLock(async (id, opts = {}) => {
 		opts = clone(opts);
 
-		const metadata = await stores.docStore.get(id).catch(() => {});
+		const metadata = await stores.docStore.get(id);
 
 		if (metadata == null) {
 			throw createError(MISSING_DOC, 'missing');
@@ -389,7 +385,7 @@ export default async function LevelPouch(opts) {
 
 		const seq = metadata.rev_map[rev];
 
-		const doc = await stores.bySeqStore.get(formatSeq(seq)).catch(() => {});
+		const doc = await stores.bySeqStore.get(formatSeq(seq));
 
 		if (doc == null) {
 			throw createError(MISSING_DOC);
@@ -422,13 +418,7 @@ export default async function LevelPouch(opts) {
 		const { digest } = attachment;
 		const type = attachment.content_type;
 
-		const attach = await stores.binaryStore.get(digest).catch(e => {
-			if (e.name !== 'NotFoundError') {
-				throw e;
-			}
-
-			return Buffer.allocUnsafe(0);
-		});
+		const attach = await stores.binaryStore.get(digest) ?? Buffer.allocUnsafe(0);
 
 		attach.type = type;
 
@@ -471,12 +461,12 @@ export default async function LevelPouch(opts) {
 		}
 
 		// verify any stub attachments as a precondition test
-		function verifyAttachment(digest) {
-			return txn.get(stores.attachmentStore, digest)
-				.catch(() => Promise.reject(createError(
-					MISSING_STUB,
-					`unknown stub attachment with digest ${digest}`
-				)));
+		async function verifyAttachment(digest) {
+			const value = await txn.get(stores.attachmentStore, digest);
+
+			if (value == null) {
+				throw createError(MISSING_STUB, `unknown stub attachment with digest ${digest}`);
+			}
 		}
 
 		async function verifyAttachments() {
@@ -503,14 +493,10 @@ export default async function LevelPouch(opts) {
 					return;
 				}
 
-				try {
-					const info = await txn.get(stores.docStore, doc._id);
+				const info = await txn.get(stores.docStore, doc._id);
+
+				if (info != null) {
 					fetchedDocs.set(doc._id, info);
-				} catch (e) {
-					/* istanbul ignore if */
-					if (e.name !== 'NotFoundError') {
-						throw e;
-					}
 				}
 			}));
 		}
@@ -645,11 +631,7 @@ export default async function LevelPouch(opts) {
 
 		function saveAttachmentRefs(id, rev, digest) {
 			async function fetchAtt() {
-				const oldAtt = await txn.get(stores.attachmentStore, digest).catch(e => {
-					if (e.name !== 'NotFoundError') {
-						throw e;
-					}
-				});
+				const oldAtt = await txn.get(stores.attachmentStore, digest);
 
 				saveAtt(oldAtt);
 
@@ -895,8 +877,7 @@ export default async function LevelPouch(opts) {
 				doc.doc = null;
 				doc.value.deleted = true;
 			} else if (opts.include_docs) {
-				doc.doc = await stores.bySeqStore.get(formatSeq(metadata.rev_map[winningRev]))
-					.catch(() => {});
+				doc.doc = await stores.bySeqStore.get(formatSeq(metadata.rev_map[winningRev]));
 
 				doc.doc._rev = doc.value.rev;
 
@@ -997,7 +978,7 @@ export default async function LevelPouch(opts) {
 
 				if (!metadata) {
 					// metadata not cached, have to go fetch it
-					metadata = await stores.docStore.get(doc._id).catch(() => {});
+					metadata = await stores.docStore.get(doc._id);
 
 					/* istanbul ignore if */
 					if (opts.cancelled || opts.done || db.isClosed() || isLocalId(metadata.id)) {
@@ -1018,7 +999,7 @@ export default async function LevelPouch(opts) {
 
 				const winningDoc = winningRev === doc._rev
 					? doc
-					: await stores.bySeqStore.get(formatSeq(metadata.rev_map[winningRev])).catch(() => {});
+					: await stores.bySeqStore.get(formatSeq(metadata.rev_map[winningRev]));
 
 				const change = opts.processChange(winningDoc, metadata, opts);
 				change.seq = metadata.seq;
@@ -1103,8 +1084,11 @@ export default async function LevelPouch(opts) {
 	});
 
 	api._getRevisionTree = callbackify(async docId => {
-		const metadata = await stores.docStore.get(docId)
-			.catch(() => Promise.reject(createError(MISSING_DOC)));
+		const metadata = await stores.docStore.get(docId);
+
+		if (metadata == null) {
+			throw createError(MISSING_DOC);
+		}
 
 		return metadata.rev_tree;
 	});
@@ -1164,11 +1148,7 @@ export default async function LevelPouch(opts) {
 			});
 
 			await Promise.all(possiblyOrphanedAttachments.map(async digest => {
-				const attData = await txn.get(stores.attachmentStore, digest).catch(e => {
-					if (e.name !== 'NotFoundError') {
-						throw e;
-					}
-				});
+				const attData = await txn.get(stores.attachmentStore, digest);
 
 				if (attData != null) {
 					const refs = Object.keys(attData.refs || {}).filter(ref => !refsToDelete.has(ref));
@@ -1210,11 +1190,7 @@ export default async function LevelPouch(opts) {
 				prefix: stores.bySeqStore
 			});
 
-			const doc = await txn.get(stores.bySeqStore, formatSeq(seq)).catch(e => {
-				if (e.name !== 'NotFoundError') {
-					throw e;
-				}
-			});
+			const doc = await txn.get(stores.bySeqStore, formatSeq(seq));
 
 			if (doc != null) {
 				const atts = Object.keys(doc._attachments || {});
@@ -1234,9 +1210,15 @@ export default async function LevelPouch(opts) {
 		}
 	}
 
-	api._getLocal = callbackify(
-		id => stores.localStore.get(id).catch(() => Promise.reject(createError(MISSING_DOC)))
-	);
+	api._getLocal = callbackify(async id => {
+		const value = await stores.localStore.get(id);
+
+		if (value == null) {
+			throw createError(MISSING_DOC);
+		}
+
+		return value;
+	});
 
 	api._putLocal = callbackify(
 		(doc, opts = {}) => opts.ctx
@@ -1254,13 +1236,9 @@ export default async function LevelPouch(opts) {
 
 		const txn = opts.ctx ?? new LevelTransaction();
 
-		const resp = await txn.get(stores.localStore, id).catch(() => {
-			if (oldRev) {
-				throw createError(REV_CONFLICT);
-			}
-		});
+		const resp = await txn.get(stores.localStore, id);
 
-		if (resp && resp._rev !== oldRev) {
+		if (resp == null ? oldRev : resp._rev !== oldRev) {
 			throw createError(REV_CONFLICT);
 		}
 
@@ -1292,14 +1270,11 @@ export default async function LevelPouch(opts) {
 	async function removeLocalNoLock(doc, opts) {
 		const txn = opts.ctx ?? new LevelTransaction();
 
-		const resp = await txn.get(stores.localStore, doc._id).catch(e => {
-			/* istanbul ignore if */
-			if (e.name !== 'NotFoundError') {
-				throw e;
-			}
+		const resp = await txn.get(stores.localStore, doc._id);
 
+		if (resp == null) {
 			throw createError(MISSING_DOC);
-		});
+		}
 
 		if (resp._rev !== doc._rev) {
 			throw createError(REV_CONFLICT);

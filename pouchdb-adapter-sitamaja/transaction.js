@@ -1,25 +1,27 @@
 // @ts-check
 
 /**
- * @typedef {any} Database
- * @typedef {any} Store
- * @typedef {any} Operation
- * @typedef {any} Key
- * @typedef {any} Value
+ * @typedef {{
+ *   batch: (batch: any[]) => Promise<void>,
+ *   get(key: Key): Promise<Value>
+ * }} LevelDatabase
+ * @typedef {{ get(key: Key): Promise<any> }} Subspace
+ * @typedef {{ key: Key, value: Value, prefix: Subspace, type: 'put' | 'del' }} Operation
+ * @typedef {unknown} Key
+ * @typedef {unknown} Value
  */
 
 /**
  * @param {LevelTransaction} transaction
- * @param {Store} store
+ * @param {Subspace} store
  * @returns {Map<Key, Value>}
  */
 function getCacheFor(transaction, store) {
-	const prefix = store.prefix()[0];
 	const cache = transaction._cache;
-	let subCache = cache.get(prefix);
+	let subCache = cache.get(store);
 	if (!subCache) {
 		subCache = new Map();
-		cache.set(prefix, subCache);
+		cache.set(store, subCache);
 	}
 
 	return subCache;
@@ -32,31 +34,18 @@ export default class LevelTransaction {
 	}
 
 	/**
-	 * @param {Store} store
+	 * @param {Subspace} store
 	 * @param {Key} key
 	 * @returns {Promise<Value>}
 	 */
 	async get(store, key) {
 		const cache = getCacheFor(this, store);
-		const exists = cache.get(key);
 
-		if (exists != null) {
-			return exists;
+		if (cache.has(key)) {
+			return cache.get(key);
 		}
 
-		if (exists === null) { // deleted marker
-			/* istanbul ignore next */
-			// eslint-disable-next-line no-throw-literal
-			throw { name: 'NotFoundError' };
-		}
-
-		const res = await store.get(key).catch(/** @param {any} e */e => {
-			if (e.name === 'NotFoundError') {
-				cache.set(key, null);
-			}
-
-			throw e;
-		});
+		const res = await store.get(key);
 
 		cache.set(key, res);
 
@@ -70,14 +59,14 @@ export default class LevelTransaction {
 		for (const operation of batch) {
 			const cache = getCacheFor(this, operation.prefix);
 
-			cache.set(operation.key, operation.type === 'put' ? operation.value : null);
+			cache.set(operation.key, operation.type === 'put' ? operation.value : undefined);
 		}
 
 		this._batch.push(...batch);
 	}
 
 	/**
-	 * @param {Database} db
+	 * @param {LevelDatabase} db
 	 */
 	async execute(db) {
 		const keys = new Set();

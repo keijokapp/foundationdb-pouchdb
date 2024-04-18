@@ -80,7 +80,7 @@ export async function doMigrationOne(name, db) {
 export async function doMigrationTwo(db, stores) {
 	const batches = [];
 
-	const value = await stores.bySeqStore.get(UUID_KEY).catch(() => {});
+	const value = await stores.bySeqStore.get(UUID_KEY);
 
 	if (value == null) {
 		return;
@@ -101,8 +101,8 @@ export async function doMigrationTwo(db, stores) {
 		}
 	);
 
-	await stores.bySeqStore.get(DOC_COUNT_KEY).then(
-		value => {
+	await stores.bySeqStore.get(DOC_COUNT_KEY).then(value => {
+		if (value != null) {
 			batches.push(
 				{
 					key: DOC_COUNT_KEY,
@@ -117,12 +117,11 @@ export async function doMigrationTwo(db, stores) {
 					type: 'del'
 				}
 			);
-		},
-		() => {}
-	);
+		}
+	});
 
-	await stores.bySeqStore.get(UPDATE_SEQ_KEY).then(
-		value => {
+	await stores.bySeqStore.get(UPDATE_SEQ_KEY).then(value => {
+		if (value != null) {
 			// if no UPDATE_SEQ_KEY
 			// just skip
 			// we've gone to far to stop.
@@ -140,9 +139,8 @@ export async function doMigrationTwo(db, stores) {
 					type: 'del'
 				}
 			);
-		},
-		() => {}
-	);
+		}
+	});
 
 	const deletedSeqs = {};
 
@@ -172,9 +170,9 @@ export async function doMigrationTwo(db, stores) {
 
 				const winningSeq = ch.value.rev_map[winner];
 
-				try {
-					const value = await stores.bySeqStore.get(formatSeq(winningSeq));
+				const value = await stores.bySeqStore.get(formatSeq(winningSeq));
 
+				if (value != null) {
 					batches.push({
 						key: ch.key,
 						value,
@@ -182,8 +180,6 @@ export async function doMigrationTwo(db, stores) {
 						type: 'put',
 						valueEncoding: 'json'
 					});
-				} catch (e) {
-					// ignored intentionally
 				}
 			}
 		},
@@ -192,7 +188,7 @@ export async function doMigrationTwo(db, stores) {
 				if (!deletedSeqs[seq]) {
 					deletedSeqs[seq] = true;
 
-					const resp = await stores.bySeqStore.get(seq).catch(() => {});
+					const resp = await stores.bySeqStore.get(seq);
 
 					if (resp != null && isLocalId(resp._id)) {
 						batches.push({

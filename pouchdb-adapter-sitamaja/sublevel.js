@@ -2,15 +2,6 @@ import { EventEmitter } from 'events';
 import Codec from 'level-codec';
 import ltgt from 'ltgt';
 
-class NotFoundError extends Error {
-	constructor() {
-		super();
-		this.name = 'NotFoundError';
-	}
-}
-
-const NOT_FOUND_ERROR = new NotFoundError();
-
 const precodec = {
 	encode(decodedKey) {
 		return `\xff${decodedKey[0]}\xff${decodedKey[1]}`;
@@ -230,7 +221,7 @@ function shell(nut, prefix, options) {
 		try {
 			return await nut.get(key, prefix, mergeOpts(opts));
 		} catch (e) {
-			throw NOT_FOUND_ERROR;
+			/* ignored intentionally */
 		}
 	};
 
