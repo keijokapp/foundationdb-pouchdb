@@ -82,15 +82,11 @@ function withResolvers() {
 // winningRev and deleted are performance-killers, but
 // in newer versions of PouchDB, they are cached on the metadata
 function getWinningRev(metadata) {
-	return 'winningRev' in metadata
-		? metadata.winningRev
-		: calculateWinningRev(metadata);
+	return metadata.winningRev ?? calculateWinningRev(metadata);
 }
 
 function getIsDeleted(metadata, winningRev) {
-	return 'deleted' in metadata
-		? metadata.deleted
-		: isDeleted(metadata, winningRev);
+	return metadata.deleted ?? isDeleted(metadata, winningRev);
 }
 
 function callbackify(fn) {
