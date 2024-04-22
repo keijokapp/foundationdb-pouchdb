@@ -1,13 +1,16 @@
 import express from 'express';
+import * as fdb from 'foundationdb';
 import HttpPouch from 'pouchdb-adapter-http';
 import pouchdbExpressRouter from 'pouchdb-express-router';
 import mapreduce from 'pouchdb-mapreduce';
 import replication from 'pouchdb-replication';
 import PouchDB from 'pouchdb-core';
-import LeveldbPlugin from '../lib/plugin.js';
+import FoundationdbPlugin from '../lib/plugin.js';
+
+fdb.setAPIVersion(720);
 
 PouchDB
-	.plugin(LeveldbPlugin)
+	.plugin(FoundationdbPlugin)
 	.plugin(HttpPouch)
 	.plugin(mapreduce)
 	.plugin(replication);
@@ -27,6 +30,8 @@ app.use((req, res, next) => {
 	}
 });
 
-app.use(pouchdbExpressRouter(PouchDB));
+app.use(pouchdbExpressRouter(PouchDB.defaults({
+	db: fdb.open()
+})));
 
 app.listen(5984);

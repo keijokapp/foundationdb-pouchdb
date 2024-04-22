@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"allowSyntheticDefaultImports": true,
+		"allowJs": true,
+		"exactOptionalPropertyTypes": true,
+		"lib": [
+			"esnext"
+		],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"noEmit": true,
+    "skipLibCheck": true,
+		"strict": true,
+		"target": "ES2022",
+		"typeRoots": [
+			"types"
+		]
+	},
+	"include": [
+		"lib/**/*.js",
+		"lib/**/*.ts"
+	]
+}
