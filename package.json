@@ -22,7 +22,6 @@
     "leveldown": "^6.1.1",
     "levelup": "^4.4.0",
     "ltgt": "^2.2.1",
-    "pouchdb-adapter-utils": "^8.0.1",
     "pouchdb-core": "^8.0.1",
     "pouchdb-errors": "^8.0.1",
     "pouchdb-json": "^8.0.1",
