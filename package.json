@@ -16,6 +16,7 @@
     "lint": "eslint lib test eslint.config.js"
   },
   "dependencies": {
+    "double-ended-queue": "^2.1.0-0",
     "foundationdb": "^2.0.1",
     "pouchdb-errors": "^8.0.1",
     "pouchdb-merge": "^8.0.1",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@arbendium/eslint-config-base": "^0.2.1",
+    "@types/double-ended-queue": "^2.1.7",
     "@types/node": "^20.12.7",
     "eslint": "^8.54.0",
     "express": "^4.19.2",
