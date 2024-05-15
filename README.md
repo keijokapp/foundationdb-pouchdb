@@ -68,7 +68,6 @@ The adapter is subject to the fundamental [limitations](https://apple.github.io/
 Also, there are non-FoundationDB-specific limitations:
 
 - All write operations update "last update seq" and "doc count" keys, so concurrent write transactions are effectively guaranteed to conflict and wouldn't benefit from concurrency. This can also affect read operations, eg if they need to update views.
-- Concurrent PouchDB actions within a single transaction are not isolated. Doing any write operations in parallel with other operations results in an undefined behavior.
 
 Some of these limitations could be easily solved. If these limitations are a significant problem for you, please create an issue.
 
