@@ -7,7 +7,7 @@ export declare function isLocalId(id: Id | LocalId): id is LocalId
 export declare function latest(rev: Rev, metadata: Metadata): Rev
 export declare function merge(tree: RevTreePath[], path: RevTreePath, depth: number): {
 	tree: RevTreePath[],
-	stemmedRevs?: unknown[],
+	stemmedRevs?: Rev[],
 	conflicts: unknown
 }
 export declare function revExists(revTree: RevTreePath[], rev: Rev): boolean
