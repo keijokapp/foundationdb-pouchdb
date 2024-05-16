@@ -72,9 +72,10 @@ export type AttachmentRef = {
 	refs: Record<Ref, true>
 }
 export type DocInfo = {
+	attachments?: { digest: Digest, data: Buffer | undefined }[]
 	data: Doc
 	metadata: Metadata
-	stemmedRevs?: unknown[]
+	stemmedRevs?: Rev[] | undefined
 }
 
 export type BulkDocsResultRow = Error | {} | { ok: true, id: Id, rev: Rev }
