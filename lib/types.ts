@@ -74,7 +74,8 @@ export type AttachmentRef = {
 export type DocInfo = {
 	data: Doc,
 	metadata: Metadata,
-	stemmedRevs?: unknown[]
+	attachments?: { digest: Digest, data: Buffer | undefined }[],
+	stemmedRevs?: Rev[] | undefined
 };
 
 export type BulkDocsResultRow = Error | {} | { ok: true, id: Id, rev: Rev }
