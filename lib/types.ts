@@ -69,7 +69,7 @@ export type Attachment = {
 	data?: string | unknown
 }
 export type AttachmentRef = {
-	refs?: Record<Ref, true>
+	refs: Record<Ref, true>
 };
 export type DocInfo = {
 	data: Doc,
