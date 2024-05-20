@@ -38,16 +38,17 @@ export type LocalDoc = {
 	_deleted?: true,
 	_revisions?: unknown
 };
-export type Metadata = {
+export type Metadata<Seq = SeqString | bigint> = {
 	deleted?: boolean,
 	id: Id,
 	rev: Rev,
-	rev_map: Record<Rev, SeqString>,
+	rev_map: Record<Rev, Seq>,
 	rev_tree: RevTreePath[],
 	revisions?: { start: RevNum, ids: RevId[] },
-	seq: SeqString,
+	seq: Seq,
 	winningRev?: Rev
 }
+export type FinalizedMetadata = Metadata<SeqString>
 export type InputDoc = {
 	_id?: Id,
 	_rev?: Rev,
@@ -74,12 +75,14 @@ export type Attachment = {
 export type AttachmentRef = {
 	refs: Record<Ref, true>
 };
-export type DocInfo = {
+export type DocInfo<Seq = SeqString | bigint> = {
 	data: Doc,
-	metadata: Metadata,
+	metadata: Metadata<Seq>,
 	attachments?: { digest: Digest, data: Buffer | undefined }[],
 	stemmedRevs?: Rev[] | undefined
 };
+export type FinalizedDocInfo = DocInfo<SeqString>
+export type NonFinalizedDocInfo = DocInfo<SeqString | bigint>
 
 export type BulkDocsResultRow = Error | {} | { ok: true, id: Id, rev: Rev }
 export type AllDocsResult<Seq extends number | SeqString> = {

@@ -10,7 +10,7 @@ It is based on heavily refactored [pouchdb-adapter-leveldb-core](https://github.
 
 ## Examples
 
-**Running individual PouchDB actions in separate transactions:**
+**Running individual PouchDB operations in separate transactions:**
 
 ```js
 import PouchDB from 'pouchdb';
@@ -41,7 +41,7 @@ const docs = await pouch.allDocs();
 // }
 ```
 
-**Encapsulating multiple PouchDB actions in a single transaction:**
+**Encapsulating multiple PouchDB operations in a single transaction:**
 
 ```js
 await db.doTn(tn => {
@@ -73,7 +73,7 @@ Mutations in PouchDB databases are organized into sequences. By default, the ada
 - Sparse sequences are too large to fit into basic numeric data types. Instead, a 24-character hex strings are used. This can cause issues with PouchDB ecosystem and existing application code.
 - Commit versions are, by definition, not finalized until the transaction is committed. When using multi-operation transactions, the sequences reported by the adapter are **non-final**. A transaction read version is used as a placeholder to ensure some level of robustness within the transaction. If the final sequences are needed outside the transaction, it's up to the userland code to replace the first 10 bytes (20 hex characters) with the actual commit version.
 
-**Changing the mode for an existing database is not supported.** But it _should_ be okay with some caveats. Once sparse mode has been enabled for the database, the sequences are going to be big enough that they are only exposed as strings, even in non-sparse mode.
+> **Changing the mode for an existing database is not supported.** But effort has been made to make it possible. If this is an important feature for you, please raise an issue.
 
 Sparse sequences can be enabled by passing `sparseSeq: true` to PouchDB constructor:
 

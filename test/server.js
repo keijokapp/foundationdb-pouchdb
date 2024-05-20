@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 
 app.use(pouchdbExpressRouter(PouchDB.defaults({
 	db: fdb.open(),
-	sparseSeq: true
+	// sparseSeq: true
 })));
 
 app.listen(5984);
