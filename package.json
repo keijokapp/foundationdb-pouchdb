@@ -17,10 +17,12 @@
   },
   "dependencies": {
     "double-ended-queue": "^2.1.0-0",
-    "foundationdb": "^2.0.1",
     "pouchdb-errors": "^8.0.1",
     "pouchdb-merge": "^8.0.1",
     "pouchdb-utils": "^8.0.1"
+  },
+  "peerDependencies": {
+    "foundationdb": "github:keijokapp/node-foundationdb#68d28f2fb75d7381c2cdbd790487045e19391ce2"
   },
   "devDependencies": {
     "@arbendium/eslint-config-base": "^0.2.1",
