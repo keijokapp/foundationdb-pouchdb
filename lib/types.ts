@@ -1,5 +1,8 @@
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
+declare const seqStringSymbol: unique symbol;
+export type SeqString = string & { [seqStringSymbol]: true }
+
 declare const idSymbol: unique symbol
 export type Id = string & { [idSymbol]: true }
 
@@ -35,16 +38,17 @@ export type LocalDoc = {
 	_deleted?: true
 	_revisions?: unknown
 }
-export type Metadata = {
+export type Metadata<Seq = SeqString | bigint> = {
 	deleted?: boolean
 	id: Id
-	rev_map: Record<Rev, number>
+	rev_map: Record<Rev, Seq>
 	rev_tree: RevTreePath[]
 	rev: Rev
 	revisions?: { start: RevNum, ids: RevId[] }
-	seq: number
+	seq: Seq
 	winningRev?: Rev
 }
+export type FinalizedMetadata = Metadata<SeqString>
 export type InputDoc = {
 	_id?: Id
 	_rev?: Rev
@@ -71,19 +75,19 @@ export type Attachment = {
 export type AttachmentRef = {
 	refs: Record<Ref, true>
 }
-export type DocInfo = {
+export type DocInfo<Seq = SeqString | bigint> = {
 	attachments?: { digest: Digest, data: Buffer | undefined }[]
 	data: Doc
-	metadata: Metadata
+	metadata: Metadata<Seq>
 	stemmedRevs?: Rev[] | undefined
 }
 
 export type BulkDocsResultRow = Error | {} | { ok: true, id: Id, rev: Rev }
-export type AllDocsResult = {
+export type AllDocsResult<Seq extends number | SeqString> = {
 	offset: number | undefined
 	rows: AllDocsResultRow[]
 	total_rows: number
-	update_seq?: number
+	update_seq?: Seq
 }
 
 export type AllDocsResultRow =
@@ -110,7 +114,7 @@ export type AllDocsResultRowDoc = {
 	_rev: Rev
 }
 
-export type Change = {
+export type Change<Seq extends number | SeqString> = {
 	doc?: {
 		_attachments?: Record<
 			string,
@@ -118,10 +122,10 @@ export type Change = {
 			| { content_type: string, digest: Digest, length: number, revpos: RevNum, stub: true }
 		>
 	}
-	seq: number
+	seq: Seq
 }
 
-export type ChangesResult = {
-	results: import('./types.js').Change[]
-	last_seq: number
+export type ChangesResult<Seq extends number | SeqString> = {
+	results: import('./types.js').Change<Seq>[],
+	last_seq: Seq
 }
