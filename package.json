@@ -18,10 +18,12 @@
   },
   "dependencies": {
     "double-ended-queue": "^2.1.0-0",
-    "foundationdb": "^2.0.1",
     "pouchdb-errors": "^9.0.0",
     "pouchdb-merge": "^9.0.0",
     "pouchdb-utils": "^9.0.0"
+  },
+  "peerDependencies": {
+    "@arbendium/foundationdb": "^0.1.0"
   },
   "devDependencies": {
     "@arbendium/eslint-config-base": "^2.0.0",
