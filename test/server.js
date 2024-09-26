@@ -1,5 +1,5 @@
 import express from 'express';
-import * as fdb from 'foundationdb';
+import * as fdb from '@arbendium/foundationdb';
 import HttpPouch from 'pouchdb-adapter-http';
 import pouchdbExpressRouter from 'pouchdb-express-router';
 import mapreduce from 'pouchdb-mapreduce';
