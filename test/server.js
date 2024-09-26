@@ -23,6 +23,7 @@ app.use((req, res, next) => {
 	res.header('access-control-allow-methods', 'GET,PUT,POST,DELETE,OPTIONS');
 	res.header('access-control-allow-credentials', 'true');
 	res.header('access-control-max-age', '1000000000');
+
 	if (req.method === 'OPTIONS') {
 		res.sendStatus(200);
 	} else {
