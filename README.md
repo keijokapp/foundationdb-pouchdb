@@ -54,8 +54,12 @@ await db.doTn(tn => {
 	const doc = await pouch.put({ _id: 'foo' });
 
 	const docs = await pouch.allDocs();
-}
+})
 ```
+
+> **Note:** It is generally safe to create multiple PouchDB instances with the same transaction, but make sure that all instances with the same `name` use the same version of this adapter.
+
+> **Note:** Running multiple operations in a single transaction is not _necessarily_ faster than running them in separate transactions. Internally, operations on a single transaction would be serialized to ensure correctness. In the future, a more sophisticated locking might mitigate the need to serialize operations.
 
 ## Limitations
 
@@ -69,7 +73,7 @@ Also, there are non-FoundationDB-specific limitations:
 
 - All write operations update "last update seq" and "doc count" keys, so concurrent write transactions are effectively guaranteed to conflict and wouldn't benefit from concurrency. This can also affect read operations, eg if they need to update views.
 
-Some of these limitations could be easily solved. If these limitations are a significant problem for you, please create an issue.
+Some of these limitations are solvable. If these limitations are a significant problem for you, please create an issue.
 
 ## Testing
 
