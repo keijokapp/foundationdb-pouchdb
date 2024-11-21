@@ -1,16 +1,16 @@
-**This library is not yet production-ready and the `master` is regularly overwritten until the first "working" version to simplify keeping track of changes.**
+**This library is not yet production-ready.**
 
 ---
 
 **FoundationDB adapter for PouchDB** or **PouchDB layer for FoundationDB**, whichever way to look at it.
 
-This layer/adapter takes advantage of both systems. PouchDB provides high-level concepts- API, indices/views, asynchronous replication, etc. FoundationDB provides distributed data storage with causally consistent ACID-compliant interactive transactions. Multiple PouchDB interactions could be encapsulated into a single FoundationDB transaction which means they can be committed, rolled back or retryed together.
+This layer/adapter takes advantage of both systems. PouchDB provides high-level concepts - API, indices/views, asynchronous replication, etc. FoundationDB provides distributed data storage with causally consistent ACID-compliant interactive transactions. Multiple PouchDB interactions could be encapsulated into a single FoundationDB transaction which means they can be committed, rolled back or retryed together.
 
 It is based on heavily refactored [pouchdb-adapter-leveldb-core](https://github.com/pouchdb/pouchdb/tree/14a566f2e7bb780c1af37fd468f419f029a0adc5/packages/node_modules/pouchdb-adapter-leveldb-core) and related code.
 
 ## Examples
 
-Running individual PouchDB actions in their own transactions:
+**Running individual PouchDB operations in separate transactions:**
 
 ```js
 import PouchDB from 'pouchdb';
@@ -41,7 +41,7 @@ const docs = await pouch.allDocs();
 // }
 ```
 
-Encapsulating multiple PouchDB actions in a single transaction:
+**Encapsulating multiple PouchDB operations in a single transaction:**
 
 ```js
 await db.doTn(tn => {
