@@ -13,7 +13,8 @@
     "lib"
   ],
   "scripts": {
-    "lint": "eslint lib test eslint.config.js"
+    "lint": "eslint lib test eslint.config.js",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "double-ended-queue": "^2.1.0-0",
