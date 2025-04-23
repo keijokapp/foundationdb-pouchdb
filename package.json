@@ -20,7 +20,6 @@
     "double-ended-queue": "^2.1.0-0",
     "pouchdb-collate": "^9.0.0",
     "pouchdb-errors": "^9.0.0",
-    "pouchdb-mapreduce-utils": "^9.0.0",
     "pouchdb-merge": "^9.0.0",
     "pouchdb-utils": "^9.0.0"
   },
