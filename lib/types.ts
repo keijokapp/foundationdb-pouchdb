@@ -38,9 +38,9 @@ export type LocalDoc = {
 export type Metadata = {
 	deleted?: boolean
 	id: Id
-	rev: Rev
 	rev_map: Record<Rev, number>
 	rev_tree: RevTreePath[]
+	rev: Rev
 	revisions?: { start: RevNum, ids: RevId[] }
 	seq: number
 	winningRev?: Rev
@@ -62,11 +62,11 @@ export type RevTreeNodeStatus = {
 }
 export type Attachment = {
 	content_type: string
+	data?: string | unknown
 	digest: Digest
 	length: number
 	revpos: RevNum
 	stub?: true
-	data?: string | unknown
 }
 export type AttachmentRef = {
 	refs: Record<Ref, true>
@@ -80,9 +80,9 @@ export type DocInfo = {
 export type BulkDocsResultRow = Error | {} | { ok: true, id: Id, rev: Rev }
 export type AllDocsResult = {
 	offset: number | undefined
+	rows: AllDocsResultRow[]
 	total_rows: number
 	update_seq?: number
-	rows: AllDocsResultRow[]
 }
 
 export type AllDocsResultRow =
