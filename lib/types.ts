@@ -39,25 +39,11 @@ export type LocalDoc = {
 	_revisions?: unknown
 };
 export type Metadata<Seq = SeqString | bigint> = {
-	deleted?: boolean,
-	id: Id,
-	rev: Rev,
-	rev_map: Record<Rev, Seq>,
-	rev_tree: RevTreePath[],
-	revisions?: { start: RevNum, ids: RevId[] },
-	seq: Seq,
-	winningRev?: Rev
+	id: Id
+	seq: Seq
 }
 export type FinalizedMetadata = Metadata<SeqString>
-export type InputDoc = {
-	_id?: Id,
-	_rev?: Rev,
-	_revisions?: {
-    start: RevNum,
-    ids: RevId[]
-	},
-	rev_tree?: RevTreePath[]
-};
+export type InputDoc = object;
 export type RevTreePath = { pos: RevNum, ids: RevTreeNode }
 export type RevTreeNode = [RevId, RevTreeNodeStatus, RevTreeNode[]]
 export type RevTreeNodeStatus = {
