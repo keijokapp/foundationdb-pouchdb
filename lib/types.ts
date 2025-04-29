@@ -90,17 +90,10 @@ export type AllDocsResult<Seq extends number | SeqString> = {
 	rows: AllDocsResultRow[]
 }
 
-export type AllDocsResultRow =
-	| { key: Id, error: 'not_found' }
-	| {
-		id: Id,
-		key: Id,
-		value: {
-			rev: Rev,
-			deleted?: true
-		},
-		doc?: null | AllDocsResultRowDoc
-	}
+export type AllDocsResultRow = {
+	id: Id
+	doc?: Doc
+}
 
 export type AllDocsResultRowDoc = {
 	_attachments?: Record<
