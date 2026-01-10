@@ -121,6 +121,6 @@ export type Change = {
 }
 
 export type ChangesResult = {
-	results: import('./types.js').Change[],
+	results: Change[],
 	last_seq: number
 }
