@@ -1,16 +1,18 @@
-**This library is not yet production-ready and the `master` is regularly overwritten until the first "working" version to simplify keeping track of changes.**
+**This library is not yet production-ready.**
 
 ---
 
 **FoundationDB adapter for PouchDB** or **PouchDB layer for FoundationDB**, whichever way to look at it.
 
-This layer/adapter takes advantage of both systems. PouchDB provides high-level concepts- API, indices/views, asynchronous replication, etc. FoundationDB provides distributed data storage with causally consistent ACID-compliant interactive transactions. Multiple PouchDB interactions could be encapsulated into a single FoundationDB transaction which means they can be committed, rolled back or retryed together.
+This layer/adapter takes advantage of both systems. PouchDB provides high-level concepts - API, indices/views, asynchronous replication, etc. FoundationDB provides distributed data storage with causally consistent ACID-compliant interactive transactions. Multiple PouchDB interactions could be encapsulated into a single FoundationDB transaction which means they can be committed, rolled back or retried together.
 
 It is based on heavily refactored [pouchdb-adapter-leveldb-core](https://github.com/pouchdb/pouchdb/tree/14a566f2e7bb780c1af37fd468f419f029a0adc5/packages/node_modules/pouchdb-adapter-leveldb-core) and related code.
 
+> **Note:** Some plugins, like mapreduce, rely on the fact that other PouchDB backends (eg LevelDB or IndexedDB) are non-distributed. They rely on internal application-level locks which makes them unsuitable for use with distributed backends like FoundationDB. Alternatives to these plugins may be implemented in the future.
+
 ## Examples
 
-Running individual PouchDB actions in their own transactions:
+**Running individual PouchDB operations in separate transactions:**
 
 ```js
 import PouchDB from 'pouchdb';
@@ -41,7 +43,7 @@ const docs = await pouch.allDocs();
 // }
 ```
 
-Encapsulating multiple PouchDB actions in a single transaction:
+**Encapsulating multiple PouchDB operations in a single transaction:**
 
 ```js
 await db.doTn(tn => {
@@ -54,8 +56,46 @@ await db.doTn(tn => {
 	const doc = await pouch.put({ _id: 'foo' });
 
 	const docs = await pouch.allDocs();
-}
+})
 ```
+
+> **Note:** It is generally safe to create multiple PouchDB instances with the same transaction, but make sure that all instances with the same `name` use the same version of this adapter.
+
+> **Note:** Running multiple operations in a single transaction is not necessarily faster than running them in separate transactions. Internally, operations on a single transaction would be serialized to ensure correctness. In the future, a more sophisticated locking might mitigate the need to serialize operations.
+
+## Sparse sequences
+
+It is recommended to enable _sparse sequences_ mode if possible.
+
+Mutations in PouchDB databases are organized into sequences. By default, the adapter keeps these sequences strictly sequential (ie without gaps), just like LevelDB and other adapters. In a distributed database like FoundationDB, this would quickly become a bottleneck by making write concurrency impossible. Concurrent writes would conflict and need to be retried or canceled. Instead, the adapter can make use of FoundationDB commit versions. Versions are strictly monotonically increasing (like sequences) but not sequential. This should be, on its own, okay for most applications. The problem is that versions are big - 12 bytes each - so they don't fit into typical numeric data types. Instead, they are exposed as 24-character _hex strings_.
+
+**Caveats:**
+
+- Sparse sequences are not strictly sequential. This can cause issues when, for example, expecting `seq - 1` to exist for each reported `seq`.
+- Sparse sequences are too large to fit into basic numeric data types. Instead, a 24-character hex strings are used. This can cause issues with PouchDB ecosystem and existing application code.
+- Commit versions are, by definition, not finalized until the transaction is committed. When using multi-operation transactions, the sequences reported by the adapter are **non-final**. A transaction read version `+ 1` is used as a placeholder to ensure some level of robustness within the transaction. If the final sequences are needed outside the transaction, it's up to the userland code to replace the first 10 bytes (20 hex characters) with the actual commit version.
+
+> **Changing the mode for an existing database is not supported.** But effort has been made to make it possible. If this is an important feature for you, please raise an issue.
+
+Sparse sequences can be enabled by passing `sparseSeq: true` to PouchDB constructor:
+
+```
+const pouch = new PouchDB({
+	name: 'foo',
+	adapter: 'foundationdb',
+	db,
+	sparseSeq: true
+});
+
+db.changes({
+  since: 0n,
+  include_docs: true
+})
+```
+
+> **Note:** It is generally safe to create multiple PouchDB instances with the same transaction, but make sure that all instances with the same `name` use the same version of this adapter.
+
+> **Note:** Running multiple operations in a single transaction is not _necessarily_ faster than running them in separate transactions. Internally, operations on a single transaction would be serialized to ensure correctness. In the future, a more sophisticated locking might mitigate the need to serialize operations.
 
 ## Limitations
 
@@ -65,11 +105,7 @@ The adapter is subject to the fundamental [limitations](https://apple.github.io/
  - Transactions can last at most 5 seconds from the first read.
  - Write transactions have overall size limitations.
 
-Also, there are non-FoundationDB-specific limitations:
-
-- All write operations update "last update seq" and "doc count" keys, so concurrent write transactions are effectively guaranteed to conflict and wouldn't benefit from concurrency. This can also affect read operations, eg if they need to update views.
-
-Some of these limitations could be easily solved. If these limitations are a significant problem for you, please create an issue.
+Some of these limitations are solvable. If these limitations are a significant problem for you, please create an issue.
 
 ## Testing
 
